@@ -1,90 +1,42 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'user.g.dart';
+
+@JsonSerializable(explicitToJson: true)
 class User {
-  final int? id;
-  final String? name;
-  final String? email;
-  final DateTime? createdAt;
+  @JsonKey(required: true, disallowNullValue: true)
+  final int id;
 
-  User({this.id, this.name, this.email, this.createdAt});
+  @JsonKey(required: true, disallowNullValue: true)
+  final String name;
 
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: _parseInt(json['id']),
-      name: _parseString(json['name']),
-      email: _parseString(json['email']),
-      createdAt: _parseDateTime(
-        json['created_at'] ?? json['createdAt'],
-      ), // Handle both field names
-    );
-  }
+  @JsonKey(required: true, disallowNullValue: true)
+  final String email;
 
-  static int? _parseInt(dynamic value) {
-    if (value == null) return null;
-    if (value is int) return value;
-    if (value is String) return int.tryParse(value);
-    if (value is num) return value.toInt();
-    return null;
-  }
+  @JsonKey(
+    name: 'created_at',
+    fromJson: _parseDateTime,
+    toJson: _dateTimeToJson,
+  )
+  final DateTime createdAt;
 
-  static String? _parseString(dynamic value) {
-    if (value == null) return null;
-    if (value is String) return value;
-    return value.toString();
-  }
+  User({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.createdAt,
+  });
 
-  static DateTime? _parseDateTime(dynamic value) {
-    if (value == null) return null;
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
     if (value is DateTime) return value;
-    if (value is String) {
-      try {
-        return DateTime.parse(value);
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
+    if (value is String) return DateTime.parse(value);
+    return DateTime.now();
   }
 
-  // Method toJson yang benar
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'email': email,
-      'created_at': createdAt?.toIso8601String(), // Convert DateTime to String
-    };
-  }
+  static String _dateTimeToJson(DateTime date) => date.toIso8601String();
 
-  // Method toString untuk debugging
-  @override
-  String toString() {
-    return 'User(id: $id, name: $name, email: $email, createdAt: $createdAt)';
-  }
-
-  // Method copyWith untuk immutability
-  User copyWith({int? id, String? name, String? email, DateTime? createdAt}) {
-    return User(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      email: email ?? this.email,
-      createdAt: createdAt ?? this.createdAt,
-    );
-  }
-
-  // Method untuk validasi
-  bool get isValid => id != null && name != null && name!.isNotEmpty;
-
-  // Method untuk compare objects
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is User &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          name == other.name &&
-          email == other.email &&
-          createdAt == other.createdAt;
-
-  @override
-  int get hashCode =>
-      id.hashCode ^ name.hashCode ^ email.hashCode ^ createdAt.hashCode;
+  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
+  
+  Map<String, dynamic> toJson() => _$UserToJson(this);
 }
